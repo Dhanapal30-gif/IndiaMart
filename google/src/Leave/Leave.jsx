@@ -10,6 +10,7 @@ const Leave = () => {
     const sl=12;
     const toatlLeave=null;
     const count=null;
+    const count1=null;
     const [formData,setFormData]=useState({
         empId:setempId || '',
         leaveType:'sickLeave',
