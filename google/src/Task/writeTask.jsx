@@ -99,19 +99,22 @@ const WriteTask = () => {
     // Implement edit logic here, such as opening a modal or form to edit
   };
   
-   useEffect(() => {
-    getData();
- }, []);
- const getData =()=>{
-  if (getDataTable.isTrue) {  
-      getTask().then((response) => {
-        console.log("empId", setempId);
+  const getData = () => {
+    if (getDataTable.isTrue) {  
+      getTask()
+        .then((response) => {
+          console.log("empId", setempId);
           setEmployee(response.data);
-      }).catch(error => {
-         console.error(error);
-      });
-  }
- };
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+  };
+  
+  useEffect(() => {
+    getData();
+  }, [getData]);
   const handleSubmit = (e) => {
     e.preventDefault();
     sendTask(updateData).then((response) => {
