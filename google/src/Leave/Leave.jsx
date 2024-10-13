@@ -4,43 +4,56 @@ import './Leave.css'
 import { leave } from '../Services/Services';
 
 const Leave = () => {
-    const setempId=sessionStorage.getItem('empId');
-    console.log("leave empId",setempId);
+    //const setempId=sessionStorage.getItem('empId');
     const cl=12;
     const sl=12;
     const toatlLeave=null;
     const count=null;
     const count1=null;
-    const [formData,setFormData]=useState({
-        empId:setempId || '',
-        leaveType:'sickLeave',
-        startDate:'',
-        endDate:'',
-        reason:'',
-        fHDay:'FullDay',
+    const [formData, setFormData] = useState({
+      empId: '',  
+      leaveType: 'sickLeave',
+      startDate: '',
+      endDate: '',
+      reason: '',
+      fHDay: 'FullDay',
+      status: 'waiting for updated status'
+  });
+  useEffect(() => {
+    const storedEmpId = sessionStorage.getItem('empId');
+    console.log("leave empId",storedEmpId);
 
-    })
-
+    if (storedEmpId) {
+        setFormData((prevData) => ({
+            ...prevData,
+            empId: storedEmpId,
+        }));
+    }
+}, []); 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        leave(formData).then((response) => {
-            setFormData({
-                leaveType:'sickLeave',
-                startDate:'',
-                endDate:'',
-                reason:'',
-                fHDay:'',
-              });
-
+      e.preventDefault();
+      leave(formData)
+        .then((response) => {
+          // Reset form after successful submission
+          setFormData({
+            leaveType: 'sickLeave',
+            startDate: '',
+            endDate: '',
+            reason: '',
+            fHDay: '',
+          });
+        })
+        .catch((error) => {
+          console.error('Error submitting leave:', error);
         });
-      };
+    };
 
-      useEffect
+      
   return (
     <div className='leave'>
         <h4 style={{marginTop:'-70px'}}>Applay Leave</h4>
