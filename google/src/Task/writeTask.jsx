@@ -1,27 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { TextField, Button } from '@mui/material';
+import { TextField, Button,MenuItem } from '@mui/material';
 import './Task.css';
 import { getTask, sendTask } from '../Services/Services';
 
 const WriteTask = () => {
-  //Get session storage
-  const setempId=sessionStorage.getItem('empId');
+  // Get session storage
+  const setempId = sessionStorage.getItem('empId');
+  const setempName = sessionStorage.getItem('empName');
   const [updateData, setUpdateData] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [getDataTable, setGetDataTable] = useState({ isTrue: true });
   const [employee, setEmployee] = useState([]);
+  const [getProjectNo, setGetProjectNo] = useState([]);
+  const [getProjectName, setGetProjectName] = useState([]);
+  const [getMacroTask, setGetMacroTask] = useState([]);
+  const [getMicroTask, setGetMicroTask] = useState([]);
+  const [getStatus, setGetStatus] = useState([]);
+
   const [formData, setFormData] = useState({
-    empId:setempId ||'',
-    projectNo: '',
+    empId: setempId || '',
+    projectNo:  '',
     projectName: '',
     macroTask: '',
     microTask: '',
-    incharge: '',
+    incharge: setempName,
     startDate: '',
     endDate: '',
-    status: 'NotStarted',
-  }); 
+    status: '',
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const tasksPerPage = 5; // Set the number of tasks to display per page
 
@@ -42,37 +49,38 @@ const WriteTask = () => {
 
   const onAddButtonClick = () => {
     if (!formData.projectNo) {
-      alert("Project No is required");
+      alert('Project No is required');
       return;
     }
     if (!formData.projectName) {
-      alert("Project Name is required");
+      alert('Project Name is required');
       return;
     }
     if (!formData.macroTask) {
-      alert("macroTask is required");
+      alert('Macro Task is required');
       return;
     }
     if (!formData.microTask) {
-      alert("microTask is required");
+      alert('Micro Task is required');
       return;
     }
     if (!formData.incharge) {
-      alert("incharge is required");
+      alert('Incharge is required');
       return;
     }
     if (!formData.startDate) {
-      alert("startDate is required");
+      alert('Start Date is required');
       return;
     }
     if (!formData.endDate) {
-      alert("endDate is required");
+      alert('End Date is required');
       return;
     }
 
     setUpdateData([...updateData, formData]);
     console.log(updateData);
-    //After add the data then setformdata empty
+
+    // After adding the data, clear form
     setFormData({
       projectNo: '',
       projectName: '',
@@ -81,11 +89,10 @@ const WriteTask = () => {
       incharge: '',
       startDate: '',
       endDate: '',
-      status: 'NotStarted',
+      status: '',
     });
     setShowTable(true);
- setGetDataTable(prevState => ({ ...prevState, isFalse: false }));
-
+    setGetDataTable((prevState) => ({ ...prevState, isFalse: false }));
   };
 
   const handleDelete = (index) => {
@@ -96,14 +103,14 @@ const WriteTask = () => {
   const handleEdit = (index) => {
     const projectToEdit = updateData[index];
     console.log('Editing project:', projectToEdit);
-    // Implement edit logic here, such as opening a modal or form to edit
+    // Implement edit logic here
   };
-  
+
   const getData = () => {
-    if (getDataTable.isTrue) {  
+    if (getDataTable.isTrue) {
       getTask()
         .then((response) => {
-          console.log("empId", setempId);
+          console.log('empId', setempId);
           setEmployee(response.data);
         })
         .catch((error) => {
@@ -111,48 +118,211 @@ const WriteTask = () => {
         });
     }
   };
-  
+
   useEffect(() => {
     getData();
-  }, [getData]);
+    getTaske();
+  }, []); // Ensure this runs only once
+  
+  const getTaske = async () => {
+    try {
+        const response = await fetch('http://localhost:8080/api/getTaskManagemet');
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const getTaskManagement = await response.json();
+        console.log("getTaskManagement", getTaskManagement);
+
+        // Check if the response is an object (not an array)
+        if (getTaskManagement && typeof getTaskManagement === 'object') {
+            const projectno = [];
+            const projectname = [];
+            const macroTask = [];
+            const microTask = [];
+            const status = [];
+            // Loop through each projectNo entry in the object
+            for (const [projectNo, taskData] of Object.entries(getTaskManagement)) {
+                // Add projectNo to projectno array
+                projectno.push({ value: projectNo, label: projectNo });
+
+                // Map and add each project name, macro task, and micro task to respective arrays
+                taskData.projectName.forEach(name => {
+                    projectname.push({ value: name, label: name });
+                });
+                taskData.macroTask.forEach(task => {
+                    macroTask.push({ value: task, label: task });
+                });
+                taskData.microTask.forEach(task => {
+                    microTask.push({ value: task, label: task });
+                });
+                taskData.status.forEach(task => {
+                  status.push({ value: task, label: task });
+              });
+            }
+
+            // Update state with the collected values
+            setGetProjectNo(projectno);
+            setGetProjectName(projectname);
+            setGetMacroTask(macroTask);
+            setGetMicroTask(microTask);
+            setGetStatus(status);
+        }
+    } catch (error) {
+        console.error('Error fetching tasks:', error);
+    }
+};
+
+  
+
   const handleSubmit = (e) => {
     e.preventDefault();
     sendTask(updateData).then((response) => {
-      console.log("formData", formData);
-      console.log("updatedata", updateData);
+      console.log('formData', formData);
+      console.log('updateData', updateData);
       setUpdateData([]);
       setShowTable(false);
-      //copy previous state (prevState) and changing the value
-      getData(); 
-      setGetDataTable(prevState => ({ ...prevState, isTrue: true }));
+      // Re-fetch data
+      getData();
+      setGetDataTable((prevState) => ({ ...prevState, isTrue: true }));
     });
   };
-
-  // useEffect(() => {
-  //   getTask().then((response) => {
-  //     setEmployee(response.data);
-  //   }).catch(error => {
-  //     console.error(error);
-  //   });#FFD54F
-
-
-  // }, []);
-
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'closed':
+        return 'status-closed';
+      case 'Ongoing':
+        return 'status-ongoing';
+        case 'pending':
+        return 'status-pending';
+      case 'NotStarted':
+      default:
+        return 'status-notstarted';
+    }
+  };
   return (
     <div>
-      <h2 style={{ margin: '20px', marginTop: '10px', padding: '10px', backgroundColor: 'blueviolet', color: 'white' }}>
-        Task
-      </h2>
+      <h4>
+  Task
+</h4>
       <form style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} onSubmit={handleSubmit}>
-        <TextField label="Project No" name="projectNo" variant="outlined" fullWidth sx={{ flexBasis: '13%', marginLeft: '20px' }} value={formData.projectNo} onChange={handleChange} required />
-        <TextField label="Project Name" name="projectName" variant="outlined" fullWidth sx={{ flexBasis: '23%' }} value={formData.projectName} onChange={handleChange} />
-        <TextField label="Macro Task" name="macroTask" variant="outlined" fullWidth sx={{ flexBasis: '23%' }} value={formData.macroTask} onChange={handleChange} />
-        <TextField label="Micro Task" name="microTask" type='textarea' fullWidth sx={{ flexBasis: '23%' }} multiline rows={2} value={formData.microTask} onChange={handleChange} />
-        <TextField label="Incharge" name="incharge" variant="outlined" fullWidth sx={{ flexBasis: '13%', marginLeft: '20px' }} value={formData.incharge} onChange={handleChange} />
-        <TextField label="Start Date" name="startDate" variant="outlined" fullWidth sx={{ flexBasis: '23%' }} type="date" InputLabelProps={{ shrink: true }} value={formData.startDate} onChange={handleChange} />
-        <TextField label="End Date" name="endDate" variant="outlined" fullWidth sx={{ flexBasis: '23%' }} type="date" InputLabelProps={{ shrink: true }} value={formData.endDate} onChange={handleChange} />
-        <TextField label="Status" name="status" variant="outlined" fullWidth sx={{ flexBasis: '23%' }} value={formData.status} onChange={handleChange} disabled />
-        <Button variant="contained" style={{ marginTop: '16px' }} onClick={onAddButtonClick}>ADD</Button>
+        <TextField
+  label="Project No"
+  name="projectNo"
+  variant="outlined" // Changed to 'outlined'
+  fullWidth
+  select // Specify that this is a select input
+  sx={{ flexBasis: '13%', marginLeft: '20px' }} // Using sx for styling
+  value={formData.projectNo || ''} // Ensure it's controlled
+  onChange={handleChange}
+  required
+>
+  {getProjectNo.map(option => (
+    <MenuItem key={option.value} value={option.value}>
+      {option.label}
+    </MenuItem>
+  ))}
+</TextField>
+<TextField
+  select
+  label="Project Name"
+  name="projectName"
+  variant="outlined"
+  fullWidth
+  sx={{ flexBasis: '23%' }}
+  value={formData.projectName}
+  onChange={handleChange}
+>
+  {getProjectName.map(option => (
+    <MenuItem key={option.value} value={option.value}>
+      {option.label}
+    </MenuItem>
+  ))}
+</TextField>
+
+<TextField
+  select
+  label="Macro Task"
+  name="macroTask"
+  variant="outlined"
+  fullWidth
+  sx={{ flexBasis: '23%' }}
+  value={formData.macroTask}
+  onChange={handleChange}
+>
+  {getMacroTask.map(option => (
+    <MenuItem key={option.value} value={option.value}>
+      {option.label}
+    </MenuItem>
+  ))}
+</TextField>
+<TextField
+  select
+  label="Micro Task"
+  name="microTask"
+  variant="outlined"
+  fullWidth
+  sx={{ flexBasis: '23%' }}
+  value={formData.microTask}
+  onChange={handleChange}
+>
+  {getMicroTask.map(option => (
+    <MenuItem key={option.value} value={option.value}>
+      {option.label}
+    </MenuItem>
+  ))}
+</TextField>
+        <TextField
+          label="Incharge"
+          name="incharge"
+          variant="outlined"
+          fullWidth
+          sx={{ flexBasis: '13%', marginLeft: '20px' }}
+          value={formData.incharge}
+          onChange={handleChange}
+          InputProps={{
+            readOnly: true, // Makes the field read-only
+          }}
+        />
+        <TextField
+          label="Start Date"
+          name="startDate"
+          variant="outlined"
+          fullWidth
+          sx={{ flexBasis: '23%' }}
+          type="date"
+          InputLabelProps={{ shrink: true }}
+          value={formData.startDate}
+          onChange={handleChange}
+        />
+        <TextField
+          label="End Date"
+          name="endDate"
+          variant="outlined"
+          fullWidth
+          sx={{ flexBasis: '23%' }}
+          type="date"
+          InputLabelProps={{ shrink: true }}
+          value={formData.endDate}
+          onChange={handleChange}
+        /> 
+        <TextField 
+          label="Status"
+          name="status"
+          variant="outlined"
+          fullWidth
+          sx={{ flexBasis: '23%' }}
+          value={formData.status}
+          onChange={handleChange}
+          disabled
+        >{getStatus.map(option => (
+          <MenuItem key={option.value} value={option.value}>
+            {option.label}
+          </MenuItem>
+        ))}
+        </TextField>
+        <Button variant="contained" style={{ marginTop: '16px' }} onClick={onAddButtonClick}>
+          ADD
+        </Button>
       </form>
 
       {showTable && (
@@ -191,7 +361,7 @@ const WriteTask = () => {
               ))}
             </tbody>
           </table>
-          <Button variant="contained" color="primary" fullWidth type="submit" onClick={handleSubmit}>
+          <Button variant="contained" color="primary" fullWidth type="submit" onClick={handleSubmit}style={{width:'20px'}}>
             Submit
           </Button>
         </div>
@@ -199,7 +369,7 @@ const WriteTask = () => {
 
       {getDataTable && (
         <div>
-          <h6 style={{marginLeft:'-1390px',marginTop:'10px'}}>All Task Details</h6>
+          <h6 style={{ marginLeft: '-1390px', marginTop: '10px' }}>All Task Details</h6>
           <table>
             <thead>
               <tr>
@@ -223,26 +393,26 @@ const WriteTask = () => {
                   <td>{taskData.incharge}</td>
                   <td>{taskData.startDate}</td>
                   <td>{taskData.endDate}</td>
-                  <td>{taskData.status}</td>
+                  <td className={getStatusClass(taskData.status)}>{taskData.status}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <div className="pagination" style={{marginLeft:'1430px', color:'aquamarine'}}>
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => paginate(index + 1)}
-                className={currentPage === index + 1 ? "active" : ""}
-              >
-                {index + 1}
-              </button>
-            ))}
+
+          <div>
+            <ul className="pagination">
+              {Array.from({ length: totalPages }, (_, index) => (
+                <li key={index + 1} className="page-item">
+                  <button className="page-link" onClick={() => paginate(index + 1)}>
+                    {index + 1}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
     </div>
-    
   );
 };
 

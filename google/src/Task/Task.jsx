@@ -9,6 +9,22 @@ const Task = () => {
   const [showTable, setShowTable] = useState(true);
   const [getData, setGetData] = useState([]);
   const [form,setForm]=useState(false);
+  const [searchTerm, setSearchTerm] = useState(''); // State for the search input
+  const [filteredData, setFilteredData] = useState(getData || []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 5; // Set the number of tasks to display per page
+
+  // Calculate the indices of the first and last tasks to display
+  const [employee, setEmployee] = useState([]);
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = employee.slice(indexOfFirstTask, indexOfLastTask);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(employee.length / tasksPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const [formData, setFormData] = useState({
     empId: setempId || '',
     id:'7989',
@@ -26,8 +42,34 @@ const Task = () => {
 
   useEffect(() => {
     getAllData();
-  }, []);
+    let filtered = getData;
+
+      if (searchTerm) {
+        // Normalize the search term to lowercase and remove spaces
+        const normalizedSearchTerm = searchTerm.toLowerCase().replace(/\s+/g, '');
+
+        filtered = filtered.filter((task) => {
+          const normalizedProjectNo = task.projectNo.toLowerCase().replace(/\s+/g, '');
+          const normalizedStatus = task.status.toLowerCase().replace(/\s+/g, '');
+
+          // Search in projectNo and status (after removing spaces and converting to lowercase)
+          return (
+            normalizedProjectNo.includes(normalizedSearchTerm) || 
+            normalizedStatus.includes(normalizedSearchTerm)
+          );
+        });
+      }
+      setFilteredData(filtered);
+      const interval = setInterval(() => {
+        getAllData();
+      }, 30000); // 30000 ms = 30 seconds
   
+      // Cleanup the interval when the component unmounts
+      return () => clearInterval(interval);
+  }, [searchTerm, getData]);
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value); // Update search term on input change
+  };
   const getAllData = () => {
     getTask()
       .then((response) => {
@@ -40,6 +82,8 @@ const Task = () => {
                     sessionStorage.setItem('Id',Id);
         console.log(sessionStorage.getItem('Id',Id),"sessionStorage");
         setGetData(response.data || []);
+        setEmployee(response.data);
+
       })
       .catch(error => {
         console.error(error);
@@ -95,15 +139,21 @@ const Task = () => {
       setForm(false);
 
     });
-   // console.log(`Edit project with number:`);
-    // Add your edit logic here
   };
-
-  // const close = () => {
-  //  // console.log(`Edit project with number: ${projectNo}`);
-  //   // Add your edit logic here
-  //   setShowTable(false);
-  // };
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'closed':
+        return 'status-closed';
+      case 'Ongoing':
+        return 'status-ongoing';
+        case 'pending':
+        return 'status-pending';
+      case 'NotStarted':
+      default:
+        return 'status-notstarted';
+    }
+  };
+ 
 
   return (
     <div>
@@ -149,6 +199,21 @@ const Task = () => {
       }
         {showTable && 
           <div>
+            <div style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Search by status"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          style={{
+            padding: '10px',
+            width: '300px',
+            borderRadius: '5px',
+            marginLeft:'1090px',
+            border: '1px solid #ccc',
+          }}
+        />
+      </div>
             <table>
               <thead>
                 <tr>
@@ -167,7 +232,7 @@ const Task = () => {
                 </tr>
               </thead>
               <tbody>
-                {(getData || []).map((taskData, index) => (
+                {( filteredData ||currentTasks || []).map((taskData, index) => (
                   <tr key={index}>
                     <td>
                       <UpdateIcon
@@ -185,10 +250,21 @@ const Task = () => {
                     <td>{formatDate(taskData.endDate)}</td>
                     <td>{formatDate(taskData.secondCloseDate)}</td>
                     <td>{taskData.remark}</td>
-                    <td>{taskData.status}</td>
-                  </tr>
+                    <td className={getStatusClass(taskData.status)}>{taskData.status}</td>
+                    </tr>
                 ))}
               </tbody>
+              <div>
+            <ul className="pagination">
+              {Array.from({ length: totalPages }, (_, index) => (
+                <li key={index + 1} className="page-item">
+                  <button className="page-link" onClick={() => paginate(index + 1)}>
+                    {index + 1}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
             </table>
           </div>
         } 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, IconButton, InputAdornment, Button, Snackbar, Alert } from '@mui/material';
+import { TextField, IconButton, InputAdornment, Button, Snackbar, Alert, Typography, Box, Paper } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginEmp } from '../Services/Services';
@@ -13,13 +13,6 @@ export default function Login() {
     const [popupSeverity, setPopupSeverity] = useState('success');
     const [formData, setFormData] = useState({ empId: '', password: '' });
     const [formErrors, setFormErrors] = useState({ empId: '', password: '' });
-    const logindata={
-        empId:formData.empId,
-        password:formData.password
-    };
-    useEffect(() => {
-        console.log('Snackbar opened:', open);
-    }, [open]);
 
     const handleClickShowPassword = () => {
         setShowPassword(!showPassword);
@@ -47,30 +40,25 @@ export default function Login() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
         if (validate()) {
             loginEmp(formData)
                 .then((response) => {
-                    console.log('empId',response.data.empId)
-                    //const empId = response.data.empId;
                     const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
                     const empId = data.empId;
-                    sessionStorage.setItem('empId',empId);
-                    //console.log('session:', sessionStorage.setItem('empId',response.data.empId));
-                    console.log('session',sessionStorage.getItem('empId'));
-                    setPopupMessage(`Login successful! Employee ID: ${response.data.empId}`);
+                    const empName = data.empName;
+                    sessionStorage.setItem('empId', empId);
+                    sessionStorage.setItem('empName', empName);
+                    setPopupMessage(`Login successful! Employee ID: ${empId}`);
                     setPopupSeverity('success');
-                    setOpen(true); // Show Snackbar
+                    setOpen(true);
                     setTimeout(() => {
                         navigate('/Home');
-                    }, 1000); // Adjust as needed
-               
+                    }, 1000);
                 })
                 .catch((error) => {
-                   
                     setPopupMessage(error.response.data);
                     setPopupSeverity('error');
-                    setOpen(true); // Show Snackbar
+                    setOpen(true);
                 });
         }
     };
@@ -80,66 +68,100 @@ export default function Login() {
         setOpen(false);
     };
 
- 
     return (
-        <div >
-        <div className='contain1'>
-            <h4>OrkaTrack</h4>
-            
-            <p style={{marginLeft:'70px'}}>Please Login</p>
-            <form onSubmit={handleSubmit}>
-                <TextField
-                    label="Employee ID"
-                    variant="outlined"
-                    fullWidth
-                    name="empId"
-                    value={formData.empId}
-                    onChange={handleChange}
-                    error={Boolean(formErrors.empId)}
-                    helperText={formErrors.empId}
-                    margin="normal"
-                />
-                <TextField
-                    label="Password"
-                    variant="outlined"
-                    fullWidth
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={handleChange}
-                    error={Boolean(formErrors.password)}
-                    helperText={formErrors.password}
-                    margin="normal"
-                    InputProps={{
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    onClick={handleClickShowPassword}
-                                    edge="end"
-                                >
-                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-                <Button variant="contained" color="primary" type="submit" fullWidth style={{ marginTop: '20px' }}>
-                    Login 
-                </Button>
-                <Button color="success" component={Link} to='/CreateAccount' style={{ textTransform: 'none' }}>Register</Button> 
-                <Button color="success" component={Link} to='/ChangePassword' style={{ textTransform: 'none' }}>ChangePassword</Button>
-            </form>
-
-            <Snackbar
-                open={open}
-                autoHideDuration={3000}
-                onClose={handleClose}
+        <div
+            className="bg-image"
+            style={{
+                backgroundImage: "url('https://mdbootstrap.com/img/Photos/Others/images/76.jpg')",
+                height: '100vh',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}
+        >
+            <Paper
+                elevation={6}
+                sx={{
+                    padding: '30px',
+                    maxWidth: '400px',
+                    textAlign: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    borderRadius: '10px'
+                }}
             >
-                <Alert onClose={handleClose} severity={popupSeverity} sx={{ width: '100%',marginTop:'90px' }}>
-                    {popupMessage}
-                </Alert>
-            </Snackbar>
-        </div>
+                <Typography variant="h4" gutterBottom>
+                    OrkaTrack
+                </Typography>
+                <Typography variant="subtitle1" gutterBottom>
+                    Please Login
+                </Typography>
+
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        label="Employee ID"
+                        variant="outlined"
+                        fullWidth
+                        name="empId"
+                        value={formData.empId}
+                        onChange={handleChange}
+                        error={Boolean(formErrors.empId)}
+                        helperText={formErrors.empId}
+                        margin="normal"
+                    />
+                    <TextField
+                        label="Password"
+                        variant="outlined"
+                        fullWidth
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={handleChange}
+                        error={Boolean(formErrors.password)}
+                        helperText={formErrors.password}
+                        margin="normal"
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        onClick={handleClickShowPassword}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        type="submit"
+                        fullWidth
+                        sx={{ marginTop: '20px' }}
+                    >
+                        Login
+                    </Button>
+                    <Box mt={2}>
+                        <Button color="success" component={Link} to='/CreateAccount' sx={{ textTransform: 'none' }}>
+                        CreateAccount
+                        </Button>
+                        <Button color="success" component={Link} to='/ChangePassword' sx={{ textTransform: 'none', ml: 2 }}>
+                            Change Password
+                        </Button>
+                    </Box>
+                </form>
+                <Snackbar
+                    open={open}
+                    autoHideDuration={3000}
+                    onClose={handleClose}
+                >
+                    <Alert onClose={handleClose} severity={popupSeverity} sx={{ width: '100%' }}>
+                        {popupMessage}
+                    </Alert>
+                </Snackbar>
+            </Paper>
         </div>
     );
 }
