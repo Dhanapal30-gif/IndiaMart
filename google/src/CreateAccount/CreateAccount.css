@@ -1,26 +1,17 @@
-.contain{
-margin: 0 auto;
-margin-top: -10px;
-max-width: 300px;
-border-radius: 18px;
-border: 4px solid orchid;
-padding: 20px;
-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
-
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: rgb(255, 255, 255);
+  border-radius: 8px;
 }
 
-
-h2{
-  color:rgb(237, 69, 156);
-  margin-top: -21px;
-  text-align: left;
- 
-}
-p{
-  color: goldenrod;
-  margin-top: -21px;
-  text-align: left;
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
 }
 
-
+.form-row .MuiTextField-root {
+  flex: 1;
+}
